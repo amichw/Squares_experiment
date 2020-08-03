@@ -642,9 +642,7 @@
 
         function add_to_db(row) {
             $.post('data_collector_squares', row, function (data) {
-                // echo "console.log( 'Debug Objects: ' );";
-                console.log("Asefaef");
-                echo "console.log( 'Debug Objects:  checking " . $data . "' );";
+                console.log(data);
             });
         }
 

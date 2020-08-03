@@ -1,8 +1,9 @@
 <?php
 
+    echo "console.log( in insert data squares' );";
 
 ob_start();  
- var_dump("post variables in php file($_POST)");
+// var_dump("post variables in php file($_POST)");
  print "insert data squares!";
 $out = ob_get_clean();  
 echo $out; 
@@ -26,15 +27,15 @@ echo $out;
     $reaction_time = $_POST['reaction_time'];
     $interval_size = $_POST['interval_size'];
 
-    $user_code = safe_encode($user_code);
-    $block_num = safe_encode($block_num);
-    $trial_type = safe_encode($trial_type);
-    $trial_num = safe_encode($trial_num);
-    $long_2 = safe_encode($long_2);
-    $target_shown = safe_encode($target_shown);
-    $reaction_type = safe_encode($reaction_type);
-    $reaction_time = safe_encode($reaction_time);
-    $interval_size = safe_encode($interval_size);
+//    $user_code = safe_encode($user_code);
+//    $block_num = safe_encode($block_num);
+//    $trial_type = safe_encode($trial_type);
+//    $trial_num = safe_encode($trial_num);
+//    $long_2 = safe_encode($long_2);
+//    $target_shown = safe_encode($target_shown);
+//    $reaction_type = safe_encode($reaction_type);
+//    $reaction_time = safe_encode($reaction_time);
+//    $interval_size = safe_encode($interval_size);
 
 
 	// train variables
@@ -52,7 +53,7 @@ echo $out;
 //	$RT_train = safe_encode($RT_train);
 //	$feedback_train = safe_encode($feedback_train);
 
-    insert_results_squares($connection, $user_code, $block_num, $trial_type, $trial_num,
+    insert_results_squares($connection, $TS, $user_code, $block_num, $trial_type, $trial_num,
         $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size);
 
 

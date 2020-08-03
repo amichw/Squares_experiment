@@ -61,20 +61,26 @@ function insert_results($array,$userId,$connection,$field_id)
 }
 
 // TODO : sends to DB, change table name and field names
-function insert_results_squares($connection, $user_code, $block_num, $trial_type, $trial_num, $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size)
+function insert_results_squares($connection, $TS, $user_code, $block_num, $trial_type, $trial_num, $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size)
 {
-
-    $tableName = 'results';
-    $insert = "INSERT INTO `{$tableName}` ";
-    $insert.= "('user_code', 'block_num', 'trial_type', 'trial_num', 'long_2', 'target_shown', 'reaction_type', 'reaction_time', 'interval_size') ";
+    echo "\nInsert_results_squares:  user code: " . $user_code . "\n" ;
+//    $tableName = 'results';
+    $tableName = '_'. $TS;
+    $insert = "INSERT INTO `{$tableName}`";
+    $insert.= "(`user_code`, `block_num`, `trial_type`, `trial_num`, `long_2`, `target_shown`, `reaction_type`, `reaction_time`, `interval_size`) ";
     $insert.= "VALUES ";
-    $insert.= "(({$user_code}, {$block_num}, {$trial_type}, {$trial_num}, {$long_2}, {$target_shown}, {$reaction_type}, {$reaction_time}, {$interval_size})";
+    $insert.= "('{$user_code}', '{$block_num}', '{$trial_type}', '{$trial_num}', '{$long_2}', '{$target_shown}', '{$reaction_type}', '{$reaction_time}', '{$interval_size}')";
 
-    $results = mysqli_query($connection,$insert);
-    if(!$results) return '0';
-    $id = mysqli_insert_id($connection);
-    if(!$id || $id < 1) return '0';
-    return $id;
+    echo "result: " . $insert . "\n" ;
+    $results = mysqli_query($connection,$insert)or trigger_error("Query Failed! SQL: $insert - Error: ".mysqli_error($connection), E_USER_ERROR);;
+//    if(!$results){ echo '\n mysqli_query failed ';return '0';}
+
+//    $id = mysqli_insert_id($connection);
+//    if(!$id || $id < 1){ echo '\n mysqli_insert_id failed ';return '0';}
+//    echo "console.log( '\nInsert_results_squares: success " . $id . "\n' );";
+
+//    return $id;
+    return $results ;
 }
 
 
