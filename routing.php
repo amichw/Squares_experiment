@@ -8,15 +8,16 @@ require 'admin/config.php';
 $experiment_id = '2';
 
 // for table name:
-if (isset($_SESSION['TS'])) $TS = $_SESSION['TS'];
-else $TS  = 1;
+$table = '_results';
+//if (isset($_SESSION['TS'])) $TS = $_SESSION['TS'];
+//else $TS  = 1;
 // Open connection
 $connection = mysqli_connect(DB_HOST,DB_USER,DB_PASS,DB_NAME);
 
 // Validate connection.
 if(mysqli_connect_errno($connection))
    exit("Fail to connect to db:" . mysqli_connect_error());
-echo "Host information: " . mysqli_get_host_info($connection) . PHP_EOL."\n";
+//echo "Host information: " . mysqli_get_host_info($connection) . PHP_EOL."\n";
 
 // utf8 support
 mysqli_set_charset($connection,"utf-8");
@@ -64,7 +65,7 @@ if(isset($_SERVER['REQUEST_URI']))
 	    $gender   = $userArray['gender'];
 	}
   // The routing itself   
-    var_dump($path);
+//    var_dump($path);
 
   if ($path == '' || (isset($_GET['workerId']) && !empty($_GET['workerId'])))
     {    		    
@@ -101,6 +102,13 @@ if(isset($_SERVER['REQUEST_URI']))
         $title   = "Download DB";    
         $content = 'download_db.php';
     }
+    elseif($path == 'download_squares_db')
+    {
+        $title   = "Download_squares DB";
+        $content = 'controllers/download_squares_db.php';
+        require $content;
+        exit();
+}
     elseif($path == 'test')
     {
 		//var_dump(safe_decode('YToyOntzOjExOiJleHBlcmltZW50cyI7YToxOntpOjA7aToxO31zOjM6ImlwcyI7czozOiI6OjEiO30='));
@@ -116,16 +124,6 @@ if(isset($_SERVER['REQUEST_URI']))
         $content = 'errors/404.php';
     }
 }
-
-// TODO: create new table for user:
-$_SESSION['TS'] = time();
-$TS = $_SESSION['TS'];
-$create_table = "CREATE TABLE _" . $TS . "(row INT NOT NULL AUTO_INCREMENT, user_code VARCHAR(20), block_num INT, trial_type INT, trial_num INT, long_2 INT, target_shown INT,
- reaction_type INT, reaction_time INT, interval_size int, PRIMARY KEY ( row ))";
-
-$results = mysqli_query($connection,$create_table)or trigger_error("Query Failed! SQL: $create_table - Error: ".mysqli_error($connection), E_USER_ERROR);
-if (!$results) exit();
-echo "\n Table " .$TS. " created successfully\n";
 
 
 // TODO: squares  I think this all i need. in index.php ill link all project files

@@ -53,7 +53,7 @@ echo $out;
 //	$RT_train = safe_encode($RT_train);
 //	$feedback_train = safe_encode($feedback_train);
 
-    insert_results_squares($connection, $TS, $user_code, $block_num, $trial_type, $trial_num,
+    insert_results_squares($connection, $table, $user_code, $block_num, $trial_type, $trial_num,
         $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size);
 
 

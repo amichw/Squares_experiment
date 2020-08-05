@@ -61,11 +61,11 @@ function insert_results($array,$userId,$connection,$field_id)
 }
 
 // TODO : sends to DB, change table name and field names
-function insert_results_squares($connection, $TS, $user_code, $block_num, $trial_type, $trial_num, $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size)
+function insert_results_squares($connection, $table, $user_code, $block_num, $trial_type, $trial_num, $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size)
 {
     echo "\nInsert_results_squares:  user code: " . $user_code . "\n" ;
 //    $tableName = 'results';
-    $tableName = '_'. $TS;
+    $tableName = $table;
     $insert = "INSERT INTO `{$tableName}`";
     $insert.= "(`user_code`, `block_num`, `trial_type`, `trial_num`, `long_2`, `target_shown`, `reaction_type`, `reaction_time`, `interval_size`) ";
     $insert.= "VALUES ";
