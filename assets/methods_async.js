@@ -23,21 +23,21 @@ let expectedTargetTime = -1;
 let squareElement = document.getElementById('square');
 let feedbackElement = document.getElementById('feedback');
 
-const EARLY_SRC = 'assets1/res/tooearly.jpg';
-const ONLY_STIMULI_SRC = 'assets1/res/resptarget.jpg';
-const NO_RESPONSE_SRC = 'assets1/res/noresp.jpg';
-const PRACTICE_SRC = 'assets1/res/menu.jpg';
-const BLOCK_BEGIN_SRC = 'assets1/res/begblock.jpg';
-const RHYTHM_TARGET_SRC = 'assets1/res/rhythm_target.jpg';
-const RHYTHM_SRC = 'assets1/res/rhythm.jpg';
-const RHYTHM_HELP_SRC = 'assets1/res/srhythm.jpg';
-const INTERVAL_TARGET_SRC = 'assets1/res/interval_target.jpg';
-const INTERVAL_HELP_SRC = 'assets1/res/sinterval.jpg';
-const RANDOM_TARGET_SRC = 'assets1/res/random_target.jpg';
-const RANDOM_HELP_SRC = 'assets1/res/srandom.jpg';
-const END_SRC = 'assets1/res/end.jpg';
-const OTHER_KEY_SRC = 'assets1/res/other_key.jpg';
-const HALF_SRC = 'assets1/res/half.jpg';
+const EARLY_SRC = 'assets/res/tooearly.jpg';
+const ONLY_STIMULI_SRC = 'assets/res/resptarget.jpg';
+const NO_RESPONSE_SRC = 'assets/res/noresp.jpg';
+const PRACTICE_SRC = 'assets/res/menu.jpg';
+const BLOCK_BEGIN_SRC = 'assets/res/begblock.jpg';
+const RHYTHM_TARGET_SRC = 'assets/res/rhythm_target.jpg';
+const RHYTHM_SRC = 'assets/res/rhythm.jpg';
+const RHYTHM_HELP_SRC = 'assets/res/srhythm.jpg';
+const INTERVAL_TARGET_SRC = 'assets/res/interval_target.jpg';
+const INTERVAL_HELP_SRC = 'assets/res/sinterval.jpg';
+const RANDOM_TARGET_SRC = 'assets/res/random_target.jpg';
+const RANDOM_HELP_SRC = 'assets/res/srandom.jpg';
+const END_SRC = 'assets/res/end.jpg';
+const OTHER_KEY_SRC = 'assets/res/other_key.jpg';
+const HALF_SRC = 'assets/res/half.jpg';
 
 const MS_BETWEEN_TRIALS = 1000;
 const MS_SHOW_TARGET = 3000;
@@ -212,7 +212,7 @@ async function runExperiment(twice, first) {
 
     // save results
     console.log("results", outputObj.results);
-    exportXL(outputObj.results, outputObj.userNum);
+    // exportXL(outputObj.results, outputObj.userNum);
     await showInstruction(END_SRC);
     return true;
 }
@@ -640,7 +640,7 @@ function shuffleArray(array) {
 
 function add_to_db(row) {
     let xhr = new XMLHttpRequest();
-    // try localhost/ayelet
+    // try localhost/squares
     // xhr.open("POST", 'data_collector_squares', true);
     // xhr.setRequestHeader('Content-Type', 'application/json');
     // xhr.send(JSON.stringify(row));
@@ -654,6 +654,6 @@ function add_to_db(row) {
 
 // actual run:
 let first = Math.random() > 0.5;
-let finished = runExperiment(false, first);
+let finished = runExperiment(true, first);
 
 

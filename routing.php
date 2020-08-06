@@ -8,7 +8,7 @@ require 'admin/config.php';
 $experiment_id = '2';
 
 // for table name:
-$table = '_results';
+$table = 'results';
 //if (isset($_SESSION['TS'])) $TS = $_SESSION['TS'];
 //else $TS  = 1;
 // Open connection
@@ -34,56 +34,13 @@ if(isset($_SERVER['REQUEST_URI']))
     // Unescape and strip from base path.
     $basePathLen = strlen(rtrim(dirname($_SERVER['SCRIPT_NAME']), '\/'));	
     $path = trim(substr(urldecode($requestPath), $basePathLen + 1),'/');
-	
-//'SCRIPT_NAME' - Contains the current script's path. 
-//dirname example - Localhost Path: http://s3lab.com/Shaz3e-ResponsiveFramework/S3-CMS/_source/
-//dirname($_SERVER['PHP_SELF']); //output:  /Shaz3e-ResponsiveFramework/S3-CMS/_source
-//rtrim — Strip whitespace (or other characters) from the end of a string
 
-//urldecode - Decodes any %## encoding in the given string. Plus symbols ('+') are decoded to a space character.
-// substr -Returns the portion of string specified by the start and length parameters.
-//trim — Strip whitespace (or other characters) from the beginning and end of a string
 
-	$userId = 0;
-	$workerId = '';
-	$age = 0;
-	$gender = null;
-	$workerId = getUriParams();
-	$userArray = array();
-	
-	$participated_before = check_user_history($connection,$experiment_id,$workerId);
-	if($participated_before){
-    	redirect('http://google.com');				
-	} 
-	
-	$userArray = isUser($connection);
-	if($userArray)  
-	{
-	    $userId   = $userArray['id'];
-	    $workerID = $userArray['worker_id'];
-	    $age      = $userArray['age'];
-	    $gender   = $userArray['gender'];
-	}
   // The routing itself   
 //    var_dump($path);
 
-  if ($path == '' || (isset($_GET['workerId']) && !empty($_GET['workerId'])))
-    {    		    
-    	$title   = "The form";     
-        $content = 'form.php';
-    }
-    elseif($path == "nextPage")
-    {
-        $title   = "main";    
-        $content = 'main_experiment.php';
-    }
      // TODO : Squares, this routes to save to DB
-	    elseif($path == "data_collector")
-    {
-        $title   = "data_collector";    
-        $content = 'insert_data.php';
-    }
-      elseif($path == "data_collector_squares")
+	if($path == "data_collector_squares")
     {
         echo "console.log( 'in IF data_collector_squares' );";
 
@@ -91,16 +48,6 @@ if(isset($_SERVER['REQUEST_URI']))
         $content = 'controllers/insert_data_squares.php';
         require $content;
         exit();
-    }
-	    elseif($path == "admin")
-    {
-        $title   = "data";    
-        $content = 'db_admin.php';
-    }
-    elseif($path == 'download-db')
-    {
-        $title   = "Download DB";    
-        $content = 'download_db.php';
     }
     elseif($path == 'download_squares_db')
     {
@@ -111,11 +58,11 @@ if(isset($_SERVER['REQUEST_URI']))
 }
     elseif($path == 'test')
     {
-		//var_dump(safe_decode('YToyOntzOjExOiJleHBlcmltZW50cyI7YToxOntpOjA7aToxO31zOjM6ImlwcyI7czozOiI6OjEiO30='));
-    	//$userId = 65;
-    	//var_dump($userId);
+//		var_dump(safe_decode('YToyOntzOjExOiJleHBlcmltZW50cyI7YToxOntpOjA7aToxO31zOjM6ImlwcyI7czozOiI6OjEiO30='));
+//    	$userId = 65;
+//    	var_dump($userId);
 		//update_user_complete($userId,$connection,$experiment_id);
-		//exit();
+		exit();
     }
     else 
     {

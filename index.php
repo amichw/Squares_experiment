@@ -3,12 +3,10 @@
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
-//echo "console.log( 'Debug Objects: 111' );";
 
 
-// TODO: create new table for user:
-//$_SESSION['TS'] = time();
-//$TS = $_SESSION['TS'];
+//create new table   **  uncomment first use  **
+//
 //$TS = 'results';
 //$create_table = "CREATE TABLE " . $TS . "(row INT NOT NULL AUTO_INCREMENT, user_code VARCHAR(20),
 //block_num INT, trial_type INT, trial_num INT, long_2 INT, target_shown INT, reaction_type INT,
@@ -18,8 +16,9 @@ error_reporting(E_ALL);
 //if (!$results) exit();
 //echo "\n Table " .$TS. " created successfully\n";
 
+//   ============ end create new table  ===============
 
 
 // Squares experiment
-require 'assets1/mainSCreen.html';
+require 'assets/mainSCreen.html';
 ?>

@@ -29,28 +29,28 @@
             background: #ff0000}
 
     </style>
-    <script lang="javascript" src='assets1/res/jquery-3.5.1.js'> </script>
+    <script lang="javascript" src='assets/res/jquery-3.5.1.js'> </script>
 
-    <script lang="javascript" src="assets1/res/xlsx.full.min.js"></script>
+    <!--<script lang="javascript" src="assets/res/xlsx.full.min.js"></script>-->
 
 </head>
 <body>
 <!--<canvas style="background-color:grey;"></canvas>-->
 
 <div id="square"> </div>
-<img src='assets1/res/begblock.jpg' id="feedback"/>
+<img src='assets/res/begblock.jpg' id="feedback"/>
 
 
 
 <script>
-    function exportXL(aoo, userNum) {
-        let ws = XLSX.utils.json_to_sheet(aoo);
-        let wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-        XLSX.writeFile(wb, "testing_"+ userNum+".xlsx");
-    }
+    // function exportXL(aoo, userNum) {
+    //     let ws = XLSX.utils.json_to_sheet(aoo);
+    //     let wb = XLSX.utils.book_new();
+    //     XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    //     XLSX.writeFile(wb, "testing_"+ userNum+".xlsx");
+    // }
 </script>
-<script src="assets1/methods_async.js" ></script>
+<script src="assets/methods_async.js" ></script>
 
 </body>
 </html>

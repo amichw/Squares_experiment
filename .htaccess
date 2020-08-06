@@ -15,9 +15,7 @@ RewriteEngine On
 
 # All the paths now lead to the routing.php file
 RewriteCond %{REQUEST_FILENAME} !/assets/*
-# TODO: I think this is needed for rerouting post?!
-RewriteCond %{REQUEST_FILENAME} !/assets1/*
-# RewriteCond %{REQUEST_FILENAME} !/controllers/insert_data\.php/*
+
 RewriteRule ^ routing.php
 
 
