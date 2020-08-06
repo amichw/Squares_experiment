@@ -13,7 +13,7 @@
 
 // TODO : training loop. what to do when train rhythmic75 ?
 
-const BLOCK_LENGTH = 4;
+const BLOCK_LENGTH = 32;
 "use strict";
 
 let output = [];
@@ -147,7 +147,47 @@ async function showInstruction(instructionURL) {
 }
 
 
-async function runExperiment(twice, first) {
+function isUpperCase(str) {
+    return (/^[A-Z]+$/).test(str);
+}
+
+
+function isDisgits(num){
+    return /^\d+$/.test(num);
+
+}
+
+/**
+ * Validates user code
+ * @returns {*[]} returns true to run 75% targets section first., user code
+ */
+function validateUserCode(){
+    // get user code
+    let userCode = "";
+    let valid = false;
+    while (!valid) {
+        userCode = prompt("Please enter user code", "");
+        console.log(userCode);
+        if (userCode === null || userCode.length !== 10) continue;
+        console.log('passed A');
+        if (userCode[0]!=='A' && userCode[0]!=='B') continue;
+        console.log('passed B');
+        if (userCode[1]!=='_' || !isUpperCase(userCode.slice(2,6))|| !isDisgits(userCode.slice(6))) continue; // check digits, check C letters.
+        console.log('passed C');
+        valid = true;
+    }
+    let first = userCode[0]==='A';
+    return [first, userCode];
+}
+
+/**
+ *  Run the experiment
+ * @param first - run 75% targets section first
+ * @param userCode - user should get from admin
+ * @param twice - run both parts.
+ * @returns {Promise<boolean>}
+ */
+async function runExperiment(first, userCode, twice=true) {
 
     hideNow(squareElement);
     hideNow(feedbackElement);
@@ -156,12 +196,6 @@ async function runExperiment(twice, first) {
     let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
     let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
 
-    // get user code
-    let userCode = "";
-    while (userCode === null || userCode === "") {
-        userCode = prompt("Please enter user code", "");
-    }
-
     // output object to save results
     let outputObj = new OutputOrganizer(userCode);
 
@@ -169,12 +203,12 @@ async function runExperiment(twice, first) {
     let one = [];
     let two = [];
     if (first) {
-        one = shuffleArray(blocks100);
-        two = shuffleArray(blocks100);
-    }
-    else {
         one = shuffleArray(blocks75);
         two = shuffleArray(blocks75);
+    }
+    else {
+        one = shuffleArray(blocks100);
+        two = shuffleArray(blocks100);
     }
 
     // run 6 blocks
@@ -192,12 +226,12 @@ async function runExperiment(twice, first) {
     await showInstruction(HALF_SRC);
     if (twice) {
         if (first) {
-            one = shuffleArray(blocks75);
-            two = shuffleArray(blocks75);
-        }
-        else {
             one = shuffleArray(blocks100);
             two = shuffleArray(blocks100);
+        }
+        else {
+            one = shuffleArray(blocks75);
+            two = shuffleArray(blocks75);
         }
 
         for (let i = 0; i < one.length; i++) {
@@ -653,7 +687,8 @@ function add_to_db(row) {
 }
 
 // actual run:
-let first = Math.random() > 0.5;
-let finished = runExperiment(true, first);
+// let first = Math.random() > 0.5;
+const [first, userCode] = validateUserCode();
+let finished = runExperiment(first, userCode);
 
 
