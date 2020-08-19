@@ -16,6 +16,7 @@
 const BLOCK_LENGTH = 32;
 "use strict";
 
+let relativeTime = 0;
 let output = [];
 
 let startTime = new Date().getTime();
@@ -169,11 +170,8 @@ function validateUserCode(){
         userCode = prompt("Please enter user code", "");
         console.log(userCode);
         if (userCode === null || userCode.length !== 10) continue;
-        console.log('passed A');
         if (userCode[0]!=='A' && userCode[0]!=='B') continue;
-        console.log('passed B');
         if (userCode[1]!=='_' || !isUpperCase(userCode.slice(2,6))|| !isDisgits(userCode.slice(6))) continue; // check digits, check C letters.
-        console.log('passed C');
         valid = true;
     }
     let first = userCode[0]==='A';
@@ -265,7 +263,7 @@ async function runTrainingBlock(type) {
         let trialNum = 0;
         let trainingLength = k === KEY_MEM ? LONG_TRAINING : SHORT_TRAINING;
         while (trialNum < trainingLength) {
-            await waitForSpaceKey();
+            await waitForSpaceKey(); // wait for experimenter.
             if (type === TrialType.Random) trial = createRandomTrial(longOrShort[trialNum]);
             else if (type === TrialType.Interval) trial = createSingleIntervalTrial(longOrShort[trialNum]);
             else if (type === TrialType.Rhythmic) trial = createRhythmTrial(longOrShort[trialNum], true);
@@ -311,7 +309,7 @@ function createSingleIntervalTrial(long) {
     let cue = [600, 900][long ? 1 : 0];
     let ISIShort = [1.3, 1.4, 1.5, 1.6, 1.7];
     let ISILong = [1.95, 2.1, 2.25, 2.4, 2.55]; //inter-pair interval in interval condition
-    let initial = 500;
+    let initial = 1;
     intervals.push(initial); // first red box.
     intervals.push(initial + cue); // second red box.
     let randomIndex = Math.floor(Math.random() * ISIShort.length);
@@ -356,7 +354,8 @@ function createRandomTrial(long) {
     let ISIs = long ? ISILong : ISIShort;
 
     let offset = 0;
-    for (let i = 0; i < 5; i++) {
+    intervals.push(1);
+    for (let i = 0; i < 4; i++) {
         let randomIndex = Math.floor(Math.random() * ISIs.length);
         offset += ISIs[randomIndex] * 1000;
         intervals.push(offset);
@@ -435,8 +434,10 @@ async function runRhythmBlock(blockLength, dontShowTargetFactor = 0, outputObj) 
  * @returns {Trial} trial object.
  */
 function createRhythmTrial(long, showTarget) {
-    if (long) return new Trial([900, 1800, 2700], 3600, 4500, TrialType.Rhythmic, long, showTarget);
-    else return new Trial([600, 1200, 1800], 2400, 3000, TrialType.Rhythmic, long, showTarget);
+    // if (long) return new Trial([900, 1800, 2700], 3600, 4500, TrialType.Rhythmic, long, showTarget);
+    // else return new Trial([600, 1200, 1800], 2400, 3000, TrialType.Rhythmic, long, showTarget);
+    if (long) return new Trial([1, 900, 1800], 2700, 3600, TrialType.Rhythmic, long, showTarget);
+    else return new Trial([1, 600, 1200], 1800, 2400, TrialType.Rhythmic, long, showTarget);
 }
 
 
@@ -622,6 +623,8 @@ function showMS(object, MS, color) {
         object.style.background = color;
     }
     object.style.display = 'block';
+    console.log('stimulus', getElapsedMS() - relativeTime);
+    relativeTime = getElapsedMS();
     // targetShownTS = getElapsedMS();
     setTimeout(hideNow, MS, object);
 }
@@ -673,7 +676,7 @@ function shuffleArray(array) {
 
 
 function add_to_db(row) {
-    let xhr = new XMLHttpRequest();
+    // let xhr = new XMLHttpRequest();
     // try localhost/squares
     // xhr.open("POST", 'data_collector_squares', true);
     // xhr.setRequestHeader('Content-Type', 'application/json');
