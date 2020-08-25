@@ -26,6 +26,7 @@ echo $out;
     $reaction_type = $_POST['reaction_type'];
     $reaction_time = $_POST['reaction_time'];
     $interval_size = $_POST['interval_size'];
+    $window_visible = $_POST['window_visible'];
 
 //    $user_code = safe_encode($user_code);
 //    $block_num = safe_encode($block_num);
@@ -54,7 +55,7 @@ echo $out;
 //	$feedback_train = safe_encode($feedback_train);
 
     insert_results_squares($connection, $table, $user_code, $block_num, $trial_type, $trial_num,
-        $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size);
+        $long_2, $target_shown, $reaction_type, $reaction_time, $interval_size, $window_visible);
 
 
 

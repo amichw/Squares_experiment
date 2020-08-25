@@ -17,6 +17,8 @@ const BLOCK_LENGTH = 32;
 "use strict";
 
 let relativeTime = 0;
+let currentVisibility = true;
+let trialVisibility = true;
 let output = [];
 
 let startTime = new Date().getTime();
@@ -111,8 +113,10 @@ class OutputOrganizer {
             '8 - target shown (0)': trial.showTargetVal,
             '9 - reaction type': reactionCode,
             '10 - reaction time': reactionTime,
-            '11 - Pre target interval code': trial.col11
+            '11 - Pre target interval code': trial.col11,
+            '12 - window visible' : trialVisibility
         });
+
         let row = {
             "user_code": this.userNum,
             'block_num': this.blockNum,
@@ -122,7 +126,8 @@ class OutputOrganizer {
             'target_shown': trial.showTargetVal,
             'reaction_type': reactionCode,
             'reaction_time': reactionTime,
-            'interval_size': trial.col11
+            'interval_size': trial.col11,
+            'window_visible' : trialVisibility?'visible':'hidden'
         };
         add_to_db(row);
 
@@ -446,6 +451,7 @@ function createRhythmTrial(long, showTarget) {
 
 async function runTrial(reds, white, target, showTarget) {
     let response = -1;
+    trialVisibility = !document.hidden && document.hasFocus(); // reset visible value
     await waitMS(MS_BETWEEN_TRIALS);
     setupTrial(reds, white, target, showTarget);
     let reactionTime = await timeReaction(target, MS_SHOW_TARGET);
@@ -685,9 +691,32 @@ function add_to_db(row) {
     $.post('data_collector_squares', row, function (data) {
         console.log(data);
     });
-
-
 }
+
+/**
+ * Updates visibility state, to know if user switched windows.
+ */
+let visibilityChange = (function (window) {
+    let inView = false;
+    return function (fn) {
+        window.onfocus = window.onblur = window.onpageshow = window.onpagehide = function (e) {
+            if ({focus:1, pageshow:1}[e.type]) {
+                if (inView) return;
+                fn("visible");
+                inView = true;
+            } else if (inView) {
+                fn("hidden");
+                inView = false;
+            }
+        };
+    };
+}(this));
+
+visibilityChange(function (state) {
+    currentVisibility = state === 'visible';
+    if (!currentVisibility){trialVisibility = false;} // Only update trialVisibility if false.
+    console.log('current', state);
+});
 
 // actual run:
 // let first = Math.random() > 0.5;
