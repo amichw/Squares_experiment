@@ -37,8 +37,10 @@ const RHYTHM_TARGET_SRC = 'assets/res/rhythm_target.jpg';
 const RHYTHM_SRC = 'assets/res/rhythm.jpg';
 const RHYTHM_HELP_SRC = 'assets/res/srhythm.jpg';
 const INTERVAL_TARGET_SRC = 'assets/res/interval_target.jpg';
+const INTERVAL_SRC = 'assets/res/interval.jpg';
 const INTERVAL_HELP_SRC = 'assets/res/sinterval.jpg';
 const RANDOM_TARGET_SRC = 'assets/res/random_target.jpg';
+const RANDOM_SRC = 'assets/res/random.jpg';
 const RANDOM_HELP_SRC = 'assets/res/srandom.jpg';
 const END_SRC = 'assets/res/end.jpg';
 const OTHER_KEY_SRC = 'assets/res/other_key.jpg';
@@ -143,6 +145,46 @@ class OutputOrganizer {
     }
 }
 
+class Block{
+    constructor(instruction, help, trialType, dontShowTargetRatio=0, length=BLOCK_LENGTH){
+        this.instruction = instruction;
+        this.help = help;
+        this.trialType = trialType;
+        this.length = length;
+        this.dontShowTargetRatio = dontShowTargetRatio;
+    }
+}
+
+
+async function runBlock(block, outputObj) {
+
+    outputObj.startingBlock();
+    await showInstruction(BLOCK_BEGIN_SRC);
+    await showInstruction(block.instruction);
+    await runTrainingBlock(block.trialType);
+    await showInstruction(block.help);
+
+    let showTarget = getRandomRatioArray(block.length, block.dontShowTargetRatio);
+    let longOrShort = getRandomRatioArray(block.length, 2);
+    let trial = null;
+    let trialNum = 0;
+    let createFunc = null;
+    switch (block.trialType){
+        case TrialType.Random: createFunc = createRhythmTrial; break;
+        case TrialType.Interval: createFunc = createSingleIntervalTrial; break;
+        case TrialType.Rhythmic: createFunc = createRhythmTrial; break;
+    }
+    while (trialNum < block.length) {
+        trial = createFunc(longOrShort[trialNum] === 0, showTarget[trialNum] === 0);
+        let reaction = await runTrial(trial.reds, trial.white, trial.target, trial.showTarget);
+        if (reaction[0] !== null) {
+            trialNum++;
+            outputObj.updateOutput(trial, reaction[0], reaction[1]);
+
+        }
+    }
+}
+
 
 async function showTrainingMenu() {
     feedbackElement.src = PRACTICE_SRC;
@@ -207,8 +249,17 @@ async function runExperiment(first, userCode, twice=true) {
         hideNow(feedbackElement);
         resizeInstructions();
         await showInstruction(BLOCK_BEGIN_SRC);
-        let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
-        let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
+        let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random);
+        let randomBlock75 = new Block(RANDOM_SRC, RANDOM_HELP_SRC, TrialType.Random, 4);
+        let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval);
+        let intervalBlock75 = new Block(INTERVAL_SRC, INTERVAL_HELP_SRC, TrialType.Interval, 4);
+        let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic);
+        let rythmicBlock75 = new Block(RHYTHM_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, 4);
+        let blocks100 = [randomBlock, intervalBlock, rythmicBlock];
+        let blocks75 = [randomBlock75, intervalBlock75, rythmicBlock75];
+
+        // let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
+        // let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
 
         // output object to save results
         let outputObj = new OutputOrganizer(userCode);
@@ -227,12 +278,12 @@ async function runExperiment(first, userCode, twice=true) {
 
         // run 6 blocks
         for (let i = 0; i < one.length; i++) {
-            outputObj.startingBlock();
-            await one[i](BLOCK_LENGTH, outputObj);
+            await runBlock(one[i], outputObj);
+            // await one[i](BLOCK_LENGTH, outputObj);
         }
         for (let i = 0; i < two.length; i++) {
-            outputObj.startingBlock();
-            await two[i](BLOCK_LENGTH, outputObj);
+            await runBlock(two[i], outputObj);
+            // await two[i](BLOCK_LENGTH, outputObj);
         }
 
 
@@ -250,11 +301,13 @@ async function runExperiment(first, userCode, twice=true) {
 
             for (let i = 0; i < one.length; i++) {
                 outputObj.startingBlock();
-                await one[i](BLOCK_LENGTH, outputObj);
+                await runBlock(one[i]);
+                // await one[i](BLOCK_LENGTH, outputObj);
             }
             for (let i = 0; i < two.length; i++) {
                 outputObj.startingBlock();
-                await two[i](BLOCK_LENGTH, outputObj);
+                await runBlock(two[i]);
+                // await two[i](BLOCK_LENGTH, outputObj);
             }
         }
     }
@@ -323,7 +376,7 @@ async function runSingleIntervalBlock(blockLength, outputObj) {
  * creates a single trial object of type Interval.
  * @returns {Trial} trial object.
  */
-function createSingleIntervalTrial(long) {
+function createSingleIntervalTrial(long, showTarget=true) {
     let intervals = [];
     let cue = [600, 900][long ? 1 : 0];
     let ISIShort = [1.3, 1.4, 1.5, 1.6, 1.7];
@@ -337,7 +390,7 @@ function createSingleIntervalTrial(long) {
     intervals.push(initial + cue + randomOffset);
     intervals.push(initial + cue + randomOffset + cue);
 
-    return new Trial(intervals.slice(0, 2), intervals[2], intervals[3], TrialType.Interval, long);
+    return new Trial(intervals.slice(0, 2), intervals[2], intervals[3], TrialType.Interval, long, showTarget);
 }
 
 
@@ -366,7 +419,7 @@ async function runRandomBlock(blockLength, outputObj) {
 
  * @returns {Trial} trial object.
  */
-function createRandomTrial(long) {
+function createRandomTrial(long, showTarget=true) {
     let intervals = [];
     let ISIShort = [0.4, 0.5, 0.6, 0.7, 0.8];
     let ISILong = [0.6, 0.75, 0.9, 1.05, 1.2];
@@ -380,7 +433,7 @@ function createRandomTrial(long) {
         intervals.push(offset);
     }
 
-    return new Trial(intervals.slice(0, 3), intervals[3], intervals[4], TrialType.Random, long);
+    return new Trial(intervals.slice(0, 3), intervals[3], intervals[4], TrialType.Random, long, showTarget);
 }
 
 
