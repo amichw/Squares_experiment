@@ -19,6 +19,8 @@ const BLOCK_LENGTH = 32;
 let relativeTime = 0;
 let currentVisibility = true;
 let trialVisibility = true;
+let isEndExperiment = false;
+let isFullScreen = false;
 let output = [];
 
 let startTime = new Date().getTime();
@@ -59,6 +61,13 @@ window.addEventListener("resize", resizeInstructions, false);
 
 // window.addEventListener("beforeunload", closing, false);
 
+window.addEventListener('keyup', ev => {goFullScreen();}, {once:true}); // fullScreen on first press. (must use user interaction)
+window.addEventListener('keyup', ev => {if (ev.code === 'Escape'){endExperiment();}}, {passive:true}); // doesn't capture fullScreen escape.
+document.addEventListener("fullscreenchange", ev =>{
+                            isFullScreen = !isFullScreen;
+                            console.log('FullScreen: ', isFullScreen);
+                            if (!isFullScreen){endExperiment();}}
+                            );
 
 const TrialType = Object.freeze({
     Rhythmic: Symbol("rhythmic"),
@@ -145,7 +154,8 @@ async function showTrainingMenu() {
 
 
 async function showInstruction(instructionURL) {
-
+    if (isEndExperiment)throw new EndExp('OK');
+    // if (isEndExperiment) await waitMS(900000);
     feedbackElement.src = instructionURL;
     feedbackElement.style.display = 'block';
     await waitForSpaceKey();
@@ -192,51 +202,30 @@ function validateUserCode(){
  */
 async function runExperiment(first, userCode, twice=true) {
 
-    hideNow(squareElement);
-    hideNow(feedbackElement);
-    resizeInstructions();
-    await showInstruction(BLOCK_BEGIN_SRC);
-    let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
-    let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
+    try {
+        hideNow(squareElement);
+        hideNow(feedbackElement);
+        resizeInstructions();
+        await showInstruction(BLOCK_BEGIN_SRC);
+        let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
+        let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
 
-    // output object to save results
-    let outputObj = new OutputOrganizer(userCode);
+        // output object to save results
+        let outputObj = new OutputOrganizer(userCode);
 
-    // randomize first 6 blocks
-    let one = [];
-    let two = [];
-    if (first) {
-        one = shuffleArray(blocks75);
-        two = shuffleArray(blocks75);
-    }
-    else {
-        one = shuffleArray(blocks100);
-        two = shuffleArray(blocks100);
-    }
-
-    // run 6 blocks
-    for (let i = 0; i < one.length; i++) {
-        outputObj.startingBlock();
-        await one[i](BLOCK_LENGTH, outputObj);
-    }
-    for (let i = 0; i < two.length; i++) {
-        outputObj.startingBlock();
-        await two[i](BLOCK_LENGTH, outputObj);
-    }
-
-
-    // second half
-    await showInstruction(HALF_SRC);
-    if (twice) {
+        // randomize first 6 blocks
+        let one = [];
+        let two = [];
         if (first) {
-            one = shuffleArray(blocks100);
-            two = shuffleArray(blocks100);
-        }
-        else {
             one = shuffleArray(blocks75);
             two = shuffleArray(blocks75);
         }
+        else {
+            one = shuffleArray(blocks100);
+            two = shuffleArray(blocks100);
+        }
 
+        // run 6 blocks
         for (let i = 0; i < one.length; i++) {
             outputObj.startingBlock();
             await one[i](BLOCK_LENGTH, outputObj);
@@ -245,7 +234,32 @@ async function runExperiment(first, userCode, twice=true) {
             outputObj.startingBlock();
             await two[i](BLOCK_LENGTH, outputObj);
         }
+
+
+        // second half
+        await showInstruction(HALF_SRC);
+        if (twice) {
+            if (first) {
+                one = shuffleArray(blocks100);
+                two = shuffleArray(blocks100);
+            }
+            else {
+                one = shuffleArray(blocks75);
+                two = shuffleArray(blocks75);
+            }
+
+            for (let i = 0; i < one.length; i++) {
+                outputObj.startingBlock();
+                await one[i](BLOCK_LENGTH, outputObj);
+            }
+            for (let i = 0; i < two.length; i++) {
+                outputObj.startingBlock();
+                await two[i](BLOCK_LENGTH, outputObj);
+            }
+        }
     }
+    catch(exc){ if(exc instanceof EndExp) console.log('caught END :)'); else{} /* current code here */ }
+
 
     // save results
     console.log("results", outputObj.results);
@@ -450,11 +464,16 @@ function createRhythmTrial(long, showTarget) {
 
 
 async function runTrial(reds, white, target, showTarget) {
+    // if (isEndExperiment)await waitMS(90000000);
+    if (isEndExperiment)throw new EndExp('in trial');
     let response = -1;
     trialVisibility = !document.hidden && document.hasFocus(); // reset visible value
     await waitMS(MS_BETWEEN_TRIALS);
     setupTrial(reds, white, target, showTarget);
     let reactionTime = await timeReaction(target, MS_SHOW_TARGET);
+    // if (isEndExperiment) await waitMS(90000000);
+    if (isEndExperiment)throw new EndExp('in trial');
+
     hideNow(squareElement);
     console.log("relative reaction: ", reactionTime);
     if (reactionTime !== null) {
@@ -497,6 +516,7 @@ function setupTrial(reds, white, target, showTargetSquare = true) {
 function waitForSpaceHelper(resolve, train) {
 
     window.addEventListener('keydown', ev => {
+        if (isEndExperiment)throw new EndExp('OK');
         if (ev.code === 'Space') {
             console.log('Space pressed, instructions');
             resolve(getElapsedMS());
@@ -511,10 +531,12 @@ function waitForSpaceHelper(resolve, train) {
             console.log('Different Key pressed, instructions');
             waitForSpaceHelper(resolve, train);
         }
-    }, {once: true}); // remove after press
+    }, {useCapture:true, once:true}); // remove after press
 }
 
-function waitForSpaceKey(train = false) {
+async function waitForSpaceKey(train = false) {
+    // if (isEndExperiment) await waitMS(900000000)
+    // if (isEndExperiment)throw new EndExp('OK');
     return new Promise(resolve => {
         waitForSpaceHelper(resolve, train);
     });
@@ -718,9 +740,59 @@ visibilityChange(function (state) {
     console.log('current', state);
 });
 
+
+function goFullScreen() {
+    if (!document.fullscreenElement &&    // alternative standard method
+        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        }
+    }
+}
+
+
+function exitFullScreen(){
+        // if (document.exitFullscreen) {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+}
+
+
+async function endExperiment(){
+    // user pressed space:
+    exitFullScreen();
+    resetState();
+    isEndExperiment = true;
+    hideNow(squareElement);
+    feedbackElement.src = END_SRC;
+    feedbackElement.style.display = 'block';
+    // document.getElementById('end').style.display = 'block';
+    // throw new EndExp('pressed ESCAPE');
+    console.log('start waiting');
+    // await waitMS(9000000);
+    console.log('finished waiting');
+}
+
+
 // actual run:
 // let first = Math.random() > 0.5;
 const [first, userCode] = validateUserCode();
+// const [first, userCode] = [true, 'ASDN'];
+function EndExp(){ Error.apply(this, arguments); this.name = "EndExp"; }
+EndExp.prototype = Object.create(Error.prototype);
 let finished = runExperiment(first, userCode);
 
 
