@@ -27,6 +27,7 @@ let startTime = new Date().getTime();
 let expectedTargetTime = -1;
 let squareElement = document.getElementById('square');
 let feedbackElement = document.getElementById('feedback');
+let timerElement = document.getElementById('timerContainer');
 
 const EARLY_SRC = 'assets/res/tooearly.jpg';
 const ONLY_STIMULI_SRC = 'assets/res/resptarget.jpg';
@@ -55,6 +56,7 @@ const LONG_TRAINING = 6;
 const SHORT_TRAINING = 3;
 const KEY_KUF = 'KeyE';
 const KEY_MEM = 'KeyN';
+const TIMER_DURATION = 5 * 60 * 1000 ; // 5 min.
 let targetShownTS = 0;
 let timers = [];
 
@@ -68,8 +70,7 @@ window.addEventListener('keyup', ev => {if (ev.code === 'Escape'){endExperiment(
 document.addEventListener("fullscreenchange", ev =>{
                             isFullScreen = !isFullScreen;
                             console.log('FullScreen: ', isFullScreen);
-                            if (!isFullScreen){endExperiment();}}
-                            );
+                            if (!isFullScreen){endExperiment();}} );
 
 const TrialType = Object.freeze({
     Rhythmic: Symbol("rhythmic"),
@@ -244,25 +245,29 @@ function validateUserCode(){
  */
 async function runExperiment(first, userCode, twice=true) {
 
+
+    let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random);
+    let randomBlock75 = new Block(RANDOM_SRC, RANDOM_HELP_SRC, TrialType.Random, 4);
+    let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval);
+    let intervalBlock75 = new Block(INTERVAL_SRC, INTERVAL_HELP_SRC, TrialType.Interval, 4);
+    let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic);
+    let rythmicBlock75 = new Block(RHYTHM_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, 4);
+    let blocks100 = [randomBlock, intervalBlock, rythmicBlock];
+    let blocks75 = [randomBlock75, intervalBlock75, rythmicBlock75];
+
+    // output object to save results
+    let outputObj = new OutputOrganizer(userCode);
+
     try {
         hideNow(squareElement);
         hideNow(feedbackElement);
         resizeInstructions();
+
         await showInstruction(BLOCK_BEGIN_SRC);
-        let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random);
-        let randomBlock75 = new Block(RANDOM_SRC, RANDOM_HELP_SRC, TrialType.Random, 4);
-        let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval);
-        let intervalBlock75 = new Block(INTERVAL_SRC, INTERVAL_HELP_SRC, TrialType.Interval, 4);
-        let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic);
-        let rythmicBlock75 = new Block(RHYTHM_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, 4);
-        let blocks100 = [randomBlock, intervalBlock, rythmicBlock];
-        let blocks75 = [randomBlock75, intervalBlock75, rythmicBlock75];
 
         // let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
         // let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
 
-        // output object to save results
-        let outputObj = new OutputOrganizer(userCode);
 
         // randomize first 6 blocks
         let one = [];
@@ -288,7 +293,12 @@ async function runExperiment(first, userCode, twice=true) {
 
 
         // second half
+        feedbackElement.src = HALF_SRC;
+        feedbackElement.style.display = 'block';
+        showTimer(TIMER_DURATION);
+        await waitMS(TIMER_DURATION + 2000);
         await showInstruction(HALF_SRC);
+
         if (twice) {
             if (first) {
                 one = shuffleArray(blocks100);
@@ -301,23 +311,23 @@ async function runExperiment(first, userCode, twice=true) {
 
             for (let i = 0; i < one.length; i++) {
                 outputObj.startingBlock();
-                await runBlock(one[i]);
+                await runBlock(one[i], outputObj);
                 // await one[i](BLOCK_LENGTH, outputObj);
             }
             for (let i = 0; i < two.length; i++) {
                 outputObj.startingBlock();
-                await runBlock(two[i]);
+                await runBlock(two[i], outputObj);
                 // await two[i](BLOCK_LENGTH, outputObj);
             }
         }
     }
-    catch(exc){ if(exc instanceof EndExp) console.log('caught END :)'); else{} /* current code here */ }
+    catch(exc){ if(exc instanceof EndExp) console.log('caught END :)'); else{console.log(exc.toString());} /* current code here */ }
 
 
     // save results
     console.log("results", outputObj.results);
     // exportXL(outputObj.results, outputObj.userNum);
-    await showInstruction(END_SRC);
+    endExperiment();
     return true;
 }
 
@@ -824,20 +834,40 @@ function exitFullScreen(){
 }
 
 
-async function endExperiment(){
+function endExperiment() {
     // user pressed space:
     exitFullScreen();
     resetState();
     isEndExperiment = true;
     hideNow(squareElement);
+    hideNow(timerElement);
     feedbackElement.src = END_SRC;
     feedbackElement.style.display = 'block';
-    // document.getElementById('end').style.display = 'block';
-    // throw new EndExp('pressed ESCAPE');
-    console.log('start waiting');
-    // await waitMS(9000000);
-    console.log('finished waiting');
 }
+
+function showTimer(duration) {
+    showMS(timerElement , duration + 5000, '#ff00ff');
+    let timeElement = document.getElementById('time');
+    timeElement.style.fontSize = "xx-large";
+    duration = duration / 1000; // MS to seconds
+    let time = duration, minutes, seconds;
+
+    let id = setInterval(function () {
+        minutes = Math.floor(time / 60);
+        seconds = time % 60;
+
+        // add leading zero
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+        timeElement.textContent = minutes + ":" + seconds;
+
+        if (--time < 0) {
+           clearInterval(id);
+            }
+    }, 1000);
+}
+
+
 
 
 // actual run:
