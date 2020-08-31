@@ -21,7 +21,6 @@ let currentVisibility = true;
 let trialVisibility = true;
 let isEndExperiment = false;
 let isFullScreen = false;
-let output = [];
 
 let startTime = new Date().getTime();
 let expectedTargetTime = -1;
@@ -61,10 +60,6 @@ let targetShownTS = 0;
 let timers = [];
 
 window.addEventListener("resize", resizeInstructions, false);
-
-
-// window.addEventListener("beforeunload", closing, false);
-
 window.addEventListener('keyup', ev => {goFullScreen();}, {once:true}); // fullScreen on first press. (must use user interaction)
 window.addEventListener('keyup', ev => {if (ev.code === 'Escape'){endExperiment();}}, {passive:true}); // doesn't capture fullScreen escape.
 document.addEventListener("fullscreenchange", ev =>{
@@ -198,7 +193,6 @@ async function showTrainingMenu() {
 
 async function showInstruction(instructionURL) {
     if (isEndExperiment)throw new EndExp('OK');
-    // if (isEndExperiment) await waitMS(900000);
     feedbackElement.src = instructionURL;
     feedbackElement.style.display = 'block';
     await waitForSpaceKey();
@@ -262,12 +256,7 @@ async function runExperiment(first, userCode, twice=true) {
         hideNow(squareElement);
         hideNow(feedbackElement);
         resizeInstructions();
-
         await showInstruction(BLOCK_BEGIN_SRC);
-
-        // let blocks75 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock75];
-        // let blocks100 = [runSingleIntervalBlock, runRandomBlock, runRhythmBlock100];
-
 
         // randomize first 6 blocks
         let one = [];
@@ -282,14 +271,8 @@ async function runExperiment(first, userCode, twice=true) {
         }
 
         // run 6 blocks
-        for (let i = 0; i < one.length; i++) {
-            await runBlock(one[i], outputObj);
-            // await one[i](BLOCK_LENGTH, outputObj);
-        }
-        for (let i = 0; i < two.length; i++) {
-            await runBlock(two[i], outputObj);
-            // await two[i](BLOCK_LENGTH, outputObj);
-        }
+        for (let i = 0; i < one.length; i++) { await runBlock(one[i], outputObj);}
+        for (let i = 0; i < two.length; i++) { await runBlock(two[i], outputObj);}
 
 
         // second half
@@ -309,16 +292,8 @@ async function runExperiment(first, userCode, twice=true) {
                 two = shuffleArray(blocks75);
             }
 
-            for (let i = 0; i < one.length; i++) {
-                outputObj.startingBlock();
-                await runBlock(one[i], outputObj);
-                // await one[i](BLOCK_LENGTH, outputObj);
-            }
-            for (let i = 0; i < two.length; i++) {
-                outputObj.startingBlock();
-                await runBlock(two[i], outputObj);
-                // await two[i](BLOCK_LENGTH, outputObj);
-            }
+            for (let i = 0; i < one.length; i++) {await runBlock(one[i], outputObj);}
+            for (let i = 0; i < two.length; i++) { await runBlock(two[i], outputObj);}
         }
     }
     catch(exc){ if(exc instanceof EndExp) console.log('caught END :)'); else{console.log(exc.toString());} /* current code here */ }
@@ -326,7 +301,6 @@ async function runExperiment(first, userCode, twice=true) {
 
     // save results
     console.log("results", outputObj.results);
-    // exportXL(outputObj.results, outputObj.userNum);
     endExperiment();
     return true;
 }
@@ -361,27 +335,6 @@ async function runTrainingBlock(type) {
 }
 
 
-async function runSingleIntervalBlock(blockLength, outputObj) {
-    await showInstruction(BLOCK_BEGIN_SRC);
-    await showInstruction(INTERVAL_TARGET_SRC);
-    // await showInstruction(PRACTICE_SRC);
-    await runTrainingBlock(TrialType.Interval);
-    await showInstruction(INTERVAL_HELP_SRC);
-    let trial = null;
-    let trialNum = 0;
-    let longOrShort = getRandomRatioArray(blockLength, 2);
-    while (trialNum < blockLength) {
-        trial = createSingleIntervalTrial(longOrShort[trialNum] === 0);
-        let reaction = await runTrial(trial.reds, trial.white, trial.target, trial.showTarget);
-        if (reaction[0] !== null) {
-            trialNum++;
-            outputObj.updateOutput(trial, reaction[0], reaction[1]);
-        }
-    }
-    return outputObj;
-}
-
-
 /**
  * creates a single trial object of type Interval.
  * @returns {Trial} trial object.
@@ -401,26 +354,6 @@ function createSingleIntervalTrial(long, showTarget=true) {
     intervals.push(initial + cue + randomOffset + cue);
 
     return new Trial(intervals.slice(0, 2), intervals[2], intervals[3], TrialType.Interval, long, showTarget);
-}
-
-
-async function runRandomBlock(blockLength, outputObj) {
-    await showInstruction(BLOCK_BEGIN_SRC);
-    await showInstruction(RANDOM_TARGET_SRC);
-    await runTrainingBlock(TrialType.Random);
-    await showInstruction(RANDOM_HELP_SRC);
-    let trial = null;
-    let trialNum = 0;
-    let longOrShort = getRandomRatioArray(blockLength, 2);
-    while (trialNum < blockLength) {
-        trial = createRandomTrial(longOrShort[trialNum]);
-        let reaction = await runTrial(trial.reds, trial.white, trial.target, trial.showTarget);
-        if (reaction[0] !== null) {
-            trialNum++;
-            outputObj.updateOutput(trial, reaction[0], reaction[1]);
-        }
-    }
-    return outputObj;
 }
 
 
@@ -472,43 +405,6 @@ function getRandomRatioArray(size, factor) {
 }
 
 
-async function runRhythmBlock75(blockLength, outputObj) {
-    await runRhythmBlock(blockLength, 4, outputObj)
-}
-
-
-async function runRhythmBlock100(blockLength, outputObj) {
-    await runRhythmBlock(blockLength, 0, outputObj)
-}
-
-
-async function runRhythmBlock(blockLength, dontShowTargetFactor = 0, outputObj) {
-
-    await showInstruction(BLOCK_BEGIN_SRC);
-
-    if (dontShowTargetFactor === 0) await showInstruction(RHYTHM_TARGET_SRC);
-    else await showInstruction(RHYTHM_SRC);
-    // await showInstruction(PRACTICE_SRC);
-    if (dontShowTargetFactor === 0) await runTrainingBlock(TrialType.Rhythmic);
-    else await runTrainingBlock(TrialType.Rhythmic75);
-    await showInstruction(RHYTHM_HELP_SRC);
-
-    let showTarget = getRandomRatioArray(blockLength, dontShowTargetFactor);
-    let longOrShort = getRandomRatioArray(blockLength, 2);
-    let trial = null;
-    let trialNum = 0;
-
-    while (trialNum < blockLength) {
-        trial = createRhythmTrial(longOrShort[trialNum] === 0, showTarget[trialNum] === 0);
-        let reaction = await runTrial(trial.reds, trial.white, trial.target, trial.showTarget);
-        if (reaction[0] !== null) {
-            trialNum++;
-            outputObj.updateOutput(trial, reaction[0], reaction[1]);
-        }
-    }
-}
-
-
 /**
  * creates a single trial object of type Rhythmic.
  * @param long true for long intervals (9000)
@@ -516,25 +412,18 @@ async function runRhythmBlock(blockLength, dontShowTargetFactor = 0, outputObj) 
  * @returns {Trial} trial object.
  */
 function createRhythmTrial(long, showTarget) {
-    // if (long) return new Trial([900, 1800, 2700], 3600, 4500, TrialType.Rhythmic, long, showTarget);
-    // else return new Trial([600, 1200, 1800], 2400, 3000, TrialType.Rhythmic, long, showTarget);
     if (long) return new Trial([1, 900, 1800], 2700, 3600, TrialType.Rhythmic, long, showTarget);
     else return new Trial([1, 600, 1200], 1800, 2400, TrialType.Rhythmic, long, showTarget);
 }
 
 
-// ===========   =====     =========   ======   ==========   =======
-
-
 async function runTrial(reds, white, target, showTarget) {
-    // if (isEndExperiment)await waitMS(90000000);
     if (isEndExperiment)throw new EndExp('in trial');
     let response = -1;
     trialVisibility = !document.hidden && document.hasFocus(); // reset visible value
     await waitMS(MS_BETWEEN_TRIALS);
     setupTrial(reds, white, target, showTarget);
     let reactionTime = await timeReaction(target, MS_SHOW_TARGET);
-    // if (isEndExperiment) await waitMS(90000000);
     if (isEndExperiment)throw new EndExp('in trial');
 
     hideNow(squareElement);
@@ -598,8 +487,6 @@ function waitForSpaceHelper(resolve, train) {
 }
 
 async function waitForSpaceKey(train = false) {
-    // if (isEndExperiment) await waitMS(900000000)
-    // if (isEndExperiment)throw new EndExp('OK');
     return new Promise(resolve => {
         waitForSpaceHelper(resolve, train);
     });
@@ -709,14 +596,10 @@ function hideNow(object) {
 
 // show object for MS milliseconds. optional: change color.
 function showMS(object, MS, color) {
-    //
-    if (typeof color !== 'undefined') {
-        object.style.background = color;
-    }
+    if (typeof color !== 'undefined') {object.style.background = color;}
     object.style.display = 'block';
     console.log('stimulus', getElapsedMS() - relativeTime);
     relativeTime = getElapsedMS();
-    // targetShownTS = getElapsedMS();
     setTimeout(hideNow, MS, object);
 }
 
@@ -735,24 +618,11 @@ function waitMS(MS) {
 }
 
 
-/**
- * To save current data, in case of window close
- * @param ev
- */
-function closing(ev) {
-    console.log("closing..");
-    // if (outputObj !== null && output.length > 0 && !finished) exportXL(output);
-}
-
-
 function resizeInstructions() {
     let img = feedbackElement;
-    //
     let wid = Math.floor(window.innerWidth);
     img.style.width = wid + 'px';
-    // if (img.clientHeight > window.innerHeight) {
     img.style.height = window.innerHeight + 'px';
-    // }
 }
 
 
@@ -806,7 +676,8 @@ visibilityChange(function (state) {
 
 function goFullScreen() {
     if (!document.fullscreenElement &&    // alternative standard method
-        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {  // current working methods
+        !document.mozFullScreenElement && !document.webkitFullscreenElement
+        && !document.msFullscreenElement ) {  // current working methods
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         } else if (document.documentElement.msRequestFullscreen) {
@@ -821,7 +692,6 @@ function goFullScreen() {
 
 
 function exitFullScreen(){
-        // if (document.exitFullscreen) {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.msExitFullscreen) {
