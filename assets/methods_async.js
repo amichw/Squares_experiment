@@ -166,7 +166,7 @@ async function runBlock(block, outputObj) {
     let trialNum = 0;
     let createFunc = null;
     switch (block.trialType){
-        case TrialType.Random: createFunc = createRhythmTrial; break;
+        case TrialType.Random: createFunc = createRandomTrial; break;
         case TrialType.Interval: createFunc = createSingleIntervalTrial; break;
         case TrialType.Rhythmic: createFunc = createRhythmTrial; break;
     }
@@ -296,12 +296,12 @@ async function runExperiment(first, userCode, twice=true) {
             for (let i = 0; i < two.length; i++) { await runBlock(two[i], outputObj);}
         }
     }
-    catch(exc){ if(exc instanceof EndExp) console.log('caught END :)'); else{console.log(exc.toString());} /* current code here */ }
+    catch(exc){ if(exc instanceof EndExp) {console.log('caught END :)');} console.log(exc.toString()); /* current code here */ }
 
 
+    endExperiment();
     // save results
     console.log("results", outputObj.results);
-    endExperiment();
     return true;
 }
 
@@ -418,11 +418,11 @@ function createRhythmTrial(long, showTarget) {
 
 
 async function runTrial(reds, white, target, showTarget) {
-    if (isEndExperiment)throw new EndExp('in trial');
     let response = -1;
     trialVisibility = !document.hidden && document.hasFocus(); // reset visible value
     await waitMS(MS_BETWEEN_TRIALS);
     setupTrial(reds, white, target, showTarget);
+    if (isEndExperiment)throw new EndExp('in trial');
     let reactionTime = await timeReaction(target, MS_SHOW_TARGET);
     if (isEndExperiment)throw new EndExp('in trial');
 
@@ -623,6 +623,9 @@ function resizeInstructions() {
     let wid = Math.floor(window.innerWidth);
     img.style.width = wid + 'px';
     img.style.height = window.innerHeight + 'px';
+    img.style.maxWidth = wid + 'px';
+    img.style.maxHeight = window.innerHeight + 'px';
+    img.style.position = 'center';
 }
 
 
@@ -706,6 +709,7 @@ function exitFullScreen(){
 
 function endExperiment() {
     // user pressed space:
+    console.log('ending experiment');
     exitFullScreen();
     resetState();
     isEndExperiment = true;
