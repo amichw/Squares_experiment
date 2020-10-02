@@ -56,8 +56,24 @@ const SHORT_TRAINING = 3;
 const KEY_KUF = 'KeyE';
 const KEY_MEM = 'KeyN';
 const TIMER_DURATION = 5 * 60 * 1000 ; // 5 min.
+const MOUSE_DURATION_TILL_DISAPPEAR = 5 *  1000 ; // 5 sec.
 let targetShownTS = 0;
 let timers = [];
+let mouseShowing = true;
+let mouseTimer;
+
+
+function toggleMouseOff(){
+    document.body.style.cursor = 'none'; // disappear mouse
+    mouseShowing =false;
+}
+
+
+function toggleMouseOn(){
+    document.body.style.cursor = 'auto'; // show mouse
+    mouseShowing =true;
+}
+
 
 window.addEventListener("resize", resizeInstructions, false);
 window.addEventListener('keyup', ev => {goFullScreen();}, {once:true}); // fullScreen on first press. (must use user interaction)
@@ -66,6 +82,13 @@ document.addEventListener("fullscreenchange", ev =>{
                             isFullScreen = !isFullScreen;
                             console.log('FullScreen: ', isFullScreen);
                             if (!isFullScreen){endExperiment();}} );
+
+document.addEventListener("mousemove", ev =>{
+    if (mouseTimer) {window.clearTimeout(mouseTimer);} // reset timer
+    mouseTimer = setTimeout(toggleMouseOff, MOUSE_DURATION_TILL_DISAPPEAR);
+    console.log('mouse move: ');
+    if (!mouseShowing){ toggleMouseOn();}
+    } );
 
 const TrialType = Object.freeze({
     Rhythmic: Symbol("rhythmic"),
@@ -154,6 +177,7 @@ class Block{
 
 async function runBlock(block, outputObj) {
 
+    toggleMouseOff();
     outputObj.startingBlock();
     await showInstruction(BLOCK_BEGIN_SRC);
     await showInstruction(block.instruction);
@@ -717,6 +741,7 @@ function endExperiment() {
     hideNow(timerElement);
     feedbackElement.src = END_SRC;
     feedbackElement.style.display = 'block';
+    toggleMouseOn();
 }
 
 function showTimer(duration) {
