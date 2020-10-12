@@ -31,20 +31,24 @@ let timerElement = document.getElementById('timerContainer');
 const EARLY_SRC = 'assets/res/tooearly.jpg';
 const ONLY_STIMULI_SRC = 'assets/res/resptarget.jpg';
 const NO_RESPONSE_SRC = 'assets/res/noresp.jpg';
-const PRACTICE_SRC = 'assets/res/menu.jpg';
+const PRACTICE_SRC = 'assets/res/practice.png';
 const BLOCK_BEGIN_SRC = 'assets/res/begblock.jpg';
-const RHYTHM_TARGET_SRC = 'assets/res/rhythm_target.jpg';
+const RHYTHM_TARGET_SRC = 'assets/res/rhythm_target.svg';
 const RHYTHM_SRC = 'assets/res/rhythm.jpg';
-const RHYTHM_HELP_SRC = 'assets/res/srhythm.jpg';
-const INTERVAL_TARGET_SRC = 'assets/res/interval_target.jpg';
+const RHYTHM_HELP_SRC = 'assets/res/srhythm.svg';
+const INTERVAL_TARGET_SRC = 'assets/res/interval_target.svg';
 const INTERVAL_SRC = 'assets/res/interval.jpg';
-const INTERVAL_HELP_SRC = 'assets/res/sinterval.jpg';
+const INTERVAL_HELP_SRC = 'assets/res/sinterval.svg';
 const RANDOM_TARGET_SRC = 'assets/res/random_target.jpg';
-const RANDOM_SRC = 'assets/res/random.jpg';
+// const RANDOM_SRC = 'assets/res/random.jpg';
+const RANDOM_SRC = 'assets/res/random.svg';
 const RANDOM_HELP_SRC = 'assets/res/srandom.jpg';
 const END_SRC = 'assets/res/end.jpg';
 const OTHER_KEY_SRC = 'assets/res/other_key.jpg';
-const HALF_SRC = 'assets/res/half.jpg';
+const HALF_SRC = 'assets/res/half.svg';
+const INTRO_SRC = 'assets/res/intro.png';
+const END_BLOCK_SRC = 'assets/res/end_block.png';
+const TRAINING_MANDATORY_SRC = 'assets/res/practice_mandatory.png';
 
 const MS_BETWEEN_TRIALS = 1000;
 const MS_SHOW_TARGET = 3000;
@@ -179,9 +183,12 @@ async function runBlock(block, outputObj) {
 
     toggleMouseOff();
     outputObj.startingBlock();
-    await showInstruction(BLOCK_BEGIN_SRC);
+    // await showInstruction(BLOCK_BEGIN_SRC);
     await showInstruction(block.instruction);
-    await runTrainingBlock(block.trialType);
+    // if first time : training block:
+    let trainingMandatory = false;
+    if (outputObj.blockNum%6 < 4) {trainingMandatory = true;}
+    await runTrainingBlock(block.trialType, trainingMandatory);
     await showInstruction(block.help);
 
     let showTarget = getRandomRatioArray(block.length, block.dontShowTargetRatio);
@@ -203,6 +210,7 @@ async function runBlock(block, outputObj) {
 
         }
     }
+    await showInstruction(END_BLOCK_SRC);
 }
 
 
@@ -280,7 +288,7 @@ async function runExperiment(first, userCode, twice=true) {
         hideNow(squareElement);
         hideNow(feedbackElement);
         resizeInstructions();
-        await showInstruction(BLOCK_BEGIN_SRC);
+        await showInstruction(INTRO_SRC);
 
         // randomize first 6 blocks
         let one = [];
@@ -300,10 +308,10 @@ async function runExperiment(first, userCode, twice=true) {
 
 
         // second half
-        feedbackElement.src = HALF_SRC;
-        feedbackElement.style.display = 'block';
-        showTimer(TIMER_DURATION);
-        await waitMS(TIMER_DURATION + 2000);
+        // feedbackElement.src = HALF_SRC;
+        // feedbackElement.style.display = 'block';
+        // showTimer(TIMER_DURATION);
+        // await waitMS(TIMER_DURATION + 2000);
         await showInstruction(HALF_SRC);
 
         if (twice) {
@@ -330,30 +338,39 @@ async function runExperiment(first, userCode, twice=true) {
 }
 
 
-async function runTrainingBlock(type) {
-
+async function trainingBlock(type, k=KEY_KUF){
     let longOrShort = [1, 0, 0, 1, 1, 0];
     let targetList = [0, 0, 0, 2, 0, 2];
-    let k = await showTrainingMenu();
-    while (k === KEY_MEM || k === KEY_KUF) {
-        if (type === TrialType.Random) await showInstruction(RANDOM_HELP_SRC);
-        else if (type === TrialType.Interval) await showInstruction(INTERVAL_HELP_SRC);
-        else if (type === TrialType.Rhythmic || type === TrialType.Rhythmic75) await showInstruction(RHYTHM_HELP_SRC);
-        let trial = null;
-        let trialNum = 0;
-        let trainingLength = k === KEY_MEM ? LONG_TRAINING : SHORT_TRAINING;
-        while (trialNum < trainingLength) {
-            await waitForSpaceKey(); // wait for experimenter.
-            if (type === TrialType.Random) trial = createRandomTrial(longOrShort[trialNum]);
-            else if (type === TrialType.Interval) trial = createSingleIntervalTrial(longOrShort[trialNum]);
-            else if (type === TrialType.Rhythmic) trial = createRhythmTrial(longOrShort[trialNum], true);
-            else if (type === TrialType.Rhythmic75) trial = createRhythmTrial(longOrShort[trialNum], targetList[trialNum] === 0);
-            let reaction = await runTrial(trial.reds, trial.white, trial.target, trial.showTarget);
-            if (reaction[0] !== null) {
-                trialNum++;
-            }
+    if (type === TrialType.Random) await showInstruction(RANDOM_HELP_SRC);
+    else if (type === TrialType.Interval) await showInstruction(INTERVAL_HELP_SRC);
+    else if (type === TrialType.Rhythmic || type === TrialType.Rhythmic75) await showInstruction(RHYTHM_HELP_SRC);
+    let trial = null;
+    let trialNum = 0;
+    let trainingLength = k === KEY_MEM ? LONG_TRAINING : SHORT_TRAINING;
+    while (trialNum < trainingLength) {
+        // await waitForSpaceKey(); // wait for experimenter.
+        if (type === TrialType.Random) trial = createRandomTrial(longOrShort[trialNum]);
+        else if (type === TrialType.Interval) trial = createSingleIntervalTrial(longOrShort[trialNum]);
+        else if (type === TrialType.Rhythmic) trial = createRhythmTrial(longOrShort[trialNum], true);
+        else if (type === TrialType.Rhythmic75) trial = createRhythmTrial(longOrShort[trialNum], targetList[trialNum] === 0);
+        let reaction = await runTrial(trial.reds, trial.white, trial.target, trial.showTarget);
+        if (reaction[0] !== null) {
+            trialNum++;
         }
-        await waitForSpaceKey();
+    }
+}
+
+
+async function runTrainingBlock(type, mandatory) {
+    if(mandatory) {
+        // show intro training:
+        await showInstruction(TRAINING_MANDATORY_SRC);
+        await trainingBlock(type); // first time is mandatory.
+    }
+    let k = await showTrainingMenu();
+    while (k === KEY_MEM || k === KEY_KUF) { //KEY_MEM is old remnant from long training
+        await trainingBlock(type);
+        // await waitForSpaceKey();
         k = await showTrainingMenu();
     }
 }
@@ -500,9 +517,9 @@ function waitForSpaceHelper(resolve, train) {
         else if (train && ev.code === 'KeyE') {
             resolve(KEY_KUF);
         }
-        else if (train && ev.code === 'KeyN') {
-            resolve(KEY_MEM);
-        }
+        // else if (train && ev.code === 'KeyN') {
+        //     resolve(KEY_MEM);
+        // }
         else {
             console.log('Different Key pressed, instructions');
             waitForSpaceHelper(resolve, train);
@@ -647,8 +664,8 @@ function resizeInstructions() {
     let wid = Math.floor(window.innerWidth);
     img.style.width = wid + 'px';
     img.style.height = window.innerHeight + 'px';
-    img.style.maxWidth = wid + 'px';
-    img.style.maxHeight = window.innerHeight + 'px';
+    // img.style.maxWidth = wid + 'px';
+    // img.style.maxHeight = window.innerHeight + 'px';
     img.style.position = 'center';
 }
 
