@@ -65,6 +65,28 @@ let targetShownTS = 0;
 let timers = [];
 let mouseShowing = true;
 let mouseTimer;
+let video = document.getElementById("vid");
+const RHYTHMIC_VID_SRC = 'assets/res/rhythmic.mp4';
+const RHYTHMIC75_VID_SRC = 'assets/res/rhythmic75.mp4';
+const RANDOM_VID_SRC = 'assets/res/random.mp4';
+const RANDOM75_VID_SRC = 'assets/res/random75.mp4';
+const INTERVAL_VID_SRC = 'assets/res/interval.mp4';
+const INTERVAL75_VID_SRC = 'assets/res/interval75.mp4';
+
+async function playVid(url) {
+    //play vid
+    video.src = url;
+    video.style.display = 'block';
+    video.play();
+    return new Promise(resolve => {
+        video.addEventListener("ended", function() {
+            console.log("The video has just ended!");
+            // Let's redirect now
+            resolve('finished');
+            hideNow(video);
+        },  {once:true});
+    });
+}
 
 
 function toggleMouseOff(){
@@ -169,12 +191,13 @@ class OutputOrganizer {
 }
 
 class Block{
-    constructor(instruction, help, trialType, dontShowTargetRatio=0, length=BLOCK_LENGTH){
+    constructor(instruction, help, trialType, vid='',dontShowTargetRatio=0, length=BLOCK_LENGTH){
         this.instruction = instruction;
         this.help = help;
         this.trialType = trialType;
         this.length = length;
         this.dontShowTargetRatio = dontShowTargetRatio;
+        this.vid = vid;
     }
 }
 
@@ -187,7 +210,12 @@ async function runBlock(block, outputObj) {
     await showInstruction(block.instruction);
     // if first time : training block:
     let trainingMandatory = false;
-    if (outputObj.blockNum%6 < 4) {trainingMandatory = true;}
+    if ((outputObj.blockNum-1)%6 < 3) {
+        trainingMandatory = true;
+        // play vid:
+        console.log('playing VID!!');
+        await playVid(block.vid);
+    }
     await runTrainingBlock(block.trialType, trainingMandatory);
     await showInstruction(block.help);
 
@@ -272,12 +300,12 @@ function validateUserCode(){
 async function runExperiment(first, userCode, twice=true) {
 
 
-    let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random);
-    let randomBlock75 = new Block(RANDOM_SRC, RANDOM_HELP_SRC, TrialType.Random, 4);
-    let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval);
-    let intervalBlock75 = new Block(INTERVAL_SRC, INTERVAL_HELP_SRC, TrialType.Interval, 4);
-    let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic);
-    let rythmicBlock75 = new Block(RHYTHM_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, 4);
+    let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random, RANDOM_VID_SRC);
+    let randomBlock75 = new Block(RANDOM_SRC, RANDOM_HELP_SRC, TrialType.Random, RANDOM75_VID_SRC, 4);
+    let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval, INTERVAL_VID_SRC);
+    let intervalBlock75 = new Block(INTERVAL_SRC, INTERVAL_HELP_SRC, TrialType.Interval, INTERVAL75_VID_SRC, 4);
+    let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, RHYTHMIC_VID_SRC);
+    let rythmicBlock75 = new Block(RHYTHM_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, RHYTHMIC75_VID_SRC, 4);
     let blocks100 = [randomBlock, intervalBlock, rythmicBlock];
     let blocks75 = [randomBlock75, intervalBlock75, rythmicBlock75];
 
@@ -754,8 +782,10 @@ function endExperiment() {
     exitFullScreen();
     resetState();
     isEndExperiment = true;
+    hideNow(video);
+    video.pause();
     hideNow(squareElement);
-    hideNow(timerElement);
+    // hideNow(timerElement);
     feedbackElement.src = END_SRC;
     feedbackElement.style.display = 'block';
     toggleMouseOn();
