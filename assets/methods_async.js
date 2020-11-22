@@ -46,6 +46,7 @@ const RANDOM_HELP_SRC = 'assets/res/srandom.jpg';
 const END_SRC = 'assets/res/end.jpg';
 const OTHER_KEY_SRC = 'assets/res/other_key.jpg';
 const HALF_SRC = 'assets/res/half.svg';
+const HALF_START_SRC = 'assets/res/begin_second_part.jpg';
 const INTRO_SRC = 'assets/res/intro.png';
 const END_BLOCK_SRC = 'assets/res/end_block.png';
 const TRAINING_MANDATORY_SRC = 'assets/res/practice_mandatory.png';
@@ -67,10 +68,13 @@ let mouseShowing = true;
 let mouseTimer;
 let video = document.getElementById("vid");
 const RHYTHMIC_VID_SRC = 'assets/res/rhythmic.mp4';
+const RHYTHMIC_VID_A_SRC = 'assets/res/rhythmic_A.mp4';
 const RHYTHMIC75_VID_SRC = 'assets/res/rhythmic75.mp4';
 const RANDOM_VID_SRC = 'assets/res/random.mp4';
+const RANDOM_VID_A_SRC = 'assets/res/random_A.mp4';
 const RANDOM75_VID_SRC = 'assets/res/random75.mp4';
 const INTERVAL_VID_SRC = 'assets/res/interval.mp4';
+const INTERVAL_VID_A_SRC = 'assets/res/interval_A.mp4';
 const INTERVAL75_VID_SRC = 'assets/res/interval75.mp4';
 
 async function playVid(url) {
@@ -79,6 +83,7 @@ async function playVid(url) {
     video.style.display = 'block';
     video.play();
     return new Promise(resolve => {
+        // setTimeout(() => {video.stop(); hideNow(video); resolve(12345);}, 5000); // if no press, return.
         video.addEventListener("ended", function() {
             console.log("The video has just ended!");
             // Let's redirect now
@@ -292,7 +297,7 @@ function validateUserCode(){
 
 /**
  *  Run the experiment
- * @param first - run 75% targets section first
+ * @param first - run 75% targets section first ('A' subjects)
  * @param userCode - user should get from admin
  * @param twice - run both parts.
  * @returns {Promise<boolean>}
@@ -300,12 +305,21 @@ function validateUserCode(){
 async function runExperiment(first, userCode, twice=true) {
 
 
-    let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random, RANDOM_VID_SRC);
+    let r_vid = RANDOM_VID_SRC;
+    let i_vid = INTERVAL_VID_SRC;
+    let rhythmic_vid = RHYTHMIC_VID_SRC;
+    if (first) { // different vids for subject A in second part:
+        r_vid = RANDOM_VID_A_SRC;
+        i_vid = INTERVAL_VID_A_SRC;
+        rhythmic_vid = RHYTHMIC_VID_A_SRC;
+    }
+    let randomBlock = new Block(RANDOM_TARGET_SRC, RANDOM_HELP_SRC, TrialType.Random, r_vid);
     let randomBlock75 = new Block(RANDOM_SRC, RANDOM_HELP_SRC, TrialType.Random, RANDOM75_VID_SRC, 4);
-    let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval, INTERVAL_VID_SRC);
+    let intervalBlock = new Block(INTERVAL_TARGET_SRC, INTERVAL_HELP_SRC, TrialType.Interval, i_vid);
     let intervalBlock75 = new Block(INTERVAL_SRC, INTERVAL_HELP_SRC, TrialType.Interval, INTERVAL75_VID_SRC, 4);
-    let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, RHYTHMIC_VID_SRC);
+    let rythmicBlock = new Block(RHYTHM_TARGET_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, rhythmic_vid);
     let rythmicBlock75 = new Block(RHYTHM_SRC, RHYTHM_HELP_SRC, TrialType.Rhythmic, RHYTHMIC75_VID_SRC, 4);
+
     let blocks100 = [randomBlock, intervalBlock, rythmicBlock];
     let blocks75 = [randomBlock75, intervalBlock75, rythmicBlock75];
 
@@ -343,6 +357,7 @@ async function runExperiment(first, userCode, twice=true) {
         await showInstruction(HALF_SRC);
 
         if (twice) {
+            await showInstruction(HALF_START_SRC);
             if (first) {
                 one = shuffleArray(blocks100);
                 two = shuffleArray(blocks100);
