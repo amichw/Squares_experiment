@@ -55,7 +55,9 @@ const MS_BETWEEN_TRIALS = 1000;
 const MS_SHOW_TARGET = 3000;
 const MS_SHOW_CUE = 100;
 const MS_SHOW_FEEDBACK = 3000;
-const TARGET_COLOR = '#00ff00';
+const TARGET_COLOR = '#ffffff';
+const WHITE_COLOR = '#ffffff';
+const REDS_COLOR = '#ffffff';
 const LONG_TRAINING = 6;
 const SHORT_TRAINING = 3;
 const KEY_KUF = 'KeyE';
@@ -83,7 +85,7 @@ async function playVid(url) {
     video.style.display = 'block';
     video.play();
     return new Promise(resolve => {
-        // setTimeout(() => {video.stop(); hideNow(video); resolve(12345);}, 5000); // if no press, return.
+        // setTimeout(() => {video.stop(); hideNow(video);console.log("The video has just ended!"); resolve(12345);}, 5000); // if no press, return.
         video.addEventListener("ended", function() {
             console.log("The video has just ended!");
             // Let's redirect now
@@ -219,7 +221,7 @@ async function runBlock(block, outputObj) {
         trainingMandatory = true;
         // play vid:
         console.log('playing VID!!');
-        await playVid(block.vid);
+        // await playVid(block.vid);
     }
     await runTrainingBlock(block.trialType, trainingMandatory);
     await showInstruction(block.help);
@@ -274,6 +276,7 @@ function isDisgits(num){
     return /^\d+$/.test(num);
 
 }
+
 
 /**
  * Validates user code
@@ -540,10 +543,8 @@ async function runTrial(reds, white, target, showTarget) {
 function setupTrial(reds, white, target, showTargetSquare = true) {
     hideNow(squareElement);
     console.log("starting trial..");
-    let color = '#ff0000'; //RED
-    reds.forEach(timing => timers.push(setTimeout(showStimuli, timing, squareElement, MS_SHOW_CUE, color)));
-    color = '#ffffff'; //white
-    timers.push(setTimeout(showStimuli, white, squareElement, MS_SHOW_CUE, color));
+    reds.forEach(timing => timers.push(setTimeout(showStimuli, timing, squareElement, MS_SHOW_CUE, REDS_COLOR)));
+    timers.push(setTimeout(showStimuli, white, squareElement, MS_SHOW_CUE, WHITE_COLOR));
     timers.push(setTimeout(showTarget, target, showTargetSquare));
     expectedTargetTime = getElapsedMS() + target;
 }
